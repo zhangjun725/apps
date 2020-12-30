@@ -35,7 +35,7 @@ const NOT_FOUND: Route = {
 
 function Content ({ className }: Props): React.ReactElement<Props> {
   const location = useLocation();
-  const { t } = useTranslation();
+  const t = useTranslation();
   const { api, isApiConnected, isApiReady } = useApi();
   const { queueAction } = useContext(StatusContext);
 
@@ -55,7 +55,7 @@ function Content ({ className }: Props): React.ReactElement<Props> {
       {needsApi && (!isApiReady || !isApiConnected)
         ? (
           <div className='connecting'>
-            <Spinner label={t<string>('Initializing connection')} />
+            <Spinner label={t('Initializing connection')} />
           </div>
         )
         : (

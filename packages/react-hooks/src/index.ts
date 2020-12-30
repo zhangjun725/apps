@@ -32,5 +32,6 @@ export { useRegistrars } from './useRegistrars';
 export { useSavedFlags } from './useSavedFlags';
 export { useSudo } from './useSudo';
 export { useToggle } from './useToggle';
+export { useTranslation } from './useTranslation';
 export { useVotingStatus } from './useVotingStatus';
 export { useWeight } from './useWeight';
