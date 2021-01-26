@@ -27,20 +27,14 @@ import { TypeRegistry } from '@polkadot/types/create';
 import { keyring } from '@polkadot/ui-keyring';
 import { extractTime } from '@polkadot/util';
 
-import { alice, bob, defaultBalance, defaultBountyApi, defaultMembers, defaultTreasury, ferdie } from '../test/hooks/defaults';
+import { alice, bob, defaultMembers, defaultTreasury, ferdie } from '../test/hooks/defaults';
+import { BountiesPage, mocks } from '../test/pages/bountiesPage';
 import Bounties from './Bounties';
 import { BountyApi } from './hooks';
 
 const mockMembers = defaultMembers;
 const mockTreasury = defaultTreasury;
-let mockBountyApi = defaultBountyApi;
-let mockBalance = defaultBalance;
 const mockBlockTime = [50, '', extractTime(1)];
-
-jest.mock('./hooks', () => ({
-  useBalance: () => mockBalance,
-  useBounties: () => mockBountyApi
-}));
 
 jest.mock('@polkadot/react-hooks/useTreasury', () => ({
   useTreasury: () => mockTreasury
@@ -76,11 +70,11 @@ const propose = jest.fn().mockReturnValue('mockProposeExtrinsic');
 
 let augmentedApi: ApiPromise;
 let queueExtrinsic: QueueTxExtrinsicAdd;
-let aBountyStatus: (status: string) => BountyStatus;
-let aBountyIndex: (index?:number) => BountyIndex;
 let aBounty: ({ status, value }?: Partial<Bounty>) => Bounty;
-let bountyWith: ({ status, value }: { status?: string, value?: number }) => Bounty;
+let aBountyIndex: (index?:number) => BountyIndex;
+let aBountyStatus: (status: string) => BountyStatus;
 let bountyStatusWith: ({ curator, status }: { curator?: string, status?: string, }) => BountyStatus;
+let bountyWith: ({ status, value }: { status?: string, value?: number }) => Bounty;
 
 describe('Bounties', () => {
   beforeAll(async () => {
@@ -94,8 +88,8 @@ describe('Bounties', () => {
   });
 
   const renderBounties = (bountyApi: Partial<BountyApi> = {}, { balance = 1 } = {}) => {
-    mockBountyApi = { ...mockBountyApi, ...bountyApi };
-    mockBalance = balanceOf(balance);
+    mocks.mockBountyApi = { ...mocks.mockBountyApi, ...bountyApi };
+    mocks.mockBalance = balanceOf(balance);
     const mockApi: ApiProps = {
       api: {
         derive: {
@@ -374,35 +368,31 @@ describe('Bounties', () => {
   });
 
   describe('propose curator modal', () => {
+    let bountiesPage: BountiesPage;
+
+    beforeEach(() => {
+      bountiesPage = new BountiesPage(augmentedApi);
+    });
+
     it('shows an error if fee is greater than bounty value', async () => {
       const bounty = { status: aBountyStatus('Funded'), value: balanceOf(5) };
-      const { findByTestId, findByText } = renderOneBounty(aBounty(bounty));
+      const { findByTestId, findByText } = bountiesPage.renderOne(aBounty(bounty));
 
-      const proposeCuratorButton = await findByText('Propose Curator');
-
-      fireEvent.click(proposeCuratorButton);
-      expect(await findByText('This action will create a Council motion to assign a Curator.')).toBeTruthy();
-
+      await bountiesPage.openProposeCurator();
       const feeInput = await findByTestId("curator's fee");
 
       fireEvent.change(feeInput, { target: { value: '6' } });
-
       expect(await findByText("Curator's fee can't be higher than bounty value.")).toBeTruthy();
     });
 
     it('disables Assign Curator button if validation fails', async () => {
       const bounty = { status: aBountyStatus('Funded'), value: balanceOf(5) };
-      const { findByTestId, findByText } = renderOneBounty(aBounty(bounty));
+      const { findByTestId, findByText } = bountiesPage.renderOne(aBounty(bounty));
 
-      const proposeCuratorButton = await findByText('Propose Curator');
-
-      fireEvent.click(proposeCuratorButton);
-      expect(await findByText('This action will create a Council motion to assign a Curator.')).toBeTruthy();
-
+      await bountiesPage.openProposeCurator();
       const feeInput = await findByTestId("curator's fee");
 
       fireEvent.change(feeInput, { target: { value: '6' } });
-
       const assignCuratorButton = await findByText('Assign curator');
 
       expect(assignCuratorButton.classList.contains('isDisabled')).toBeTruthy();
@@ -488,7 +478,7 @@ describe('Bounties', () => {
 
       fireEvent.click(acceptButton);
       expect(queueExtrinsic).toHaveBeenCalledWith(expect.objectContaining({ accountId: alice, extrinsic: 'mockExtendExtrinsic' }));
-      expect(mockBountyApi.extendBountyExpiry).toHaveBeenCalledWith(aBountyIndex(0), 'The bounty extend expiry remark');
+      expect(mocks.mockBountyApi.extendBountyExpiry).toHaveBeenCalledWith(aBountyIndex(0), 'The bounty extend expiry remark');
     });
   });
 
