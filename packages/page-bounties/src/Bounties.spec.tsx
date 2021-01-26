@@ -27,7 +27,7 @@ import { TypeRegistry } from '@polkadot/types/create';
 import { keyring } from '@polkadot/ui-keyring';
 import { extractTime } from '@polkadot/util';
 
-import { alice, bob,  defaultBalance, defaultBountyApi, defaultMembers, defaultTreasury, ferdie } from '../test/hooks/defaults';
+import { alice, bob, defaultBalance, defaultBountyApi, defaultMembers, defaultTreasury, ferdie } from '../test/hooks/defaults';
 import Bounties from './Bounties';
 import { BountyApi } from './hooks';
 
